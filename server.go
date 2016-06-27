@@ -1,6 +1,7 @@
 package idle
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/emersion/go-imap/common"
@@ -18,17 +19,14 @@ func (h *Handler) Handle(conn *server.Conn) error {
 	}
 
 	// Wait for DONE
-	for {
-		line, err := conn.ReadInfo()
-		if err != nil {
-			return err
-		}
-
-		if strings.ToUpper(line) == "DONE" {
-			break
-		}
+	line, err := conn.ReadInfo()
+	if err != nil {
+		return err
 	}
 
+	if strings.ToUpper(line) != "DONE" {
+		return errors.New("Expected DONE")
+	}
 	return nil
 }
 
