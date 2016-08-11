@@ -1,10 +1,11 @@
 package idle
 
 import (
+	"bufio"
 	"errors"
 	"strings"
 
-	"github.com/emersion/go-imap/common"
+	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/server"
 )
 
@@ -12,29 +13,44 @@ type Handler struct {
 	Command
 }
 
-func (h *Handler) Handle(conn *server.Conn) error {
-	cont := &common.ContinuationResp{Info: "idling"}
+func (h *Handler) Handle(conn server.Conn) error {
+	cont := &imap.ContinuationResp{Info: "idling"}
 	if err := conn.WriteResp(cont); err != nil {
 		return err
 	}
 
 	// Wait for DONE
-	line, err := conn.ReadInfo()
-	if err != nil {
+	scanner := bufio.NewScanner(conn)
+	scanner.Scan()
+	if err := scanner.Err(); err != nil {
 		return err
 	}
 
-	if strings.ToUpper(line) != "DONE" {
+	if strings.ToUpper(scanner.Text()) != "DONE" {
 		return errors.New("Expected DONE")
 	}
 	return nil
 }
 
-// Enable the IDLE extension for a server.
-func NewServer(s *server.Server) {
-	s.RegisterCapability(CommandName, common.SelectedState)
+type extension struct{}
 
-	s.RegisterCommand(CommandName, func() server.Handler {
+func (ext *extension) Capabilities(state imap.ConnState) (caps []string) {
+	if state&imap.SelectedState != 0 {
+		caps = append(caps, Capability)
+	}
+	return
+}
+
+func (ext *extension) Command(name string) server.HandlerFactory {
+	if name != commandName {
+		return nil
+	}
+
+	return func() server.Handler {
 		return &Handler{}
-	})
+	}
+}
+
+func NewExtension() server.Extension {
+	return &extension{}
 }
