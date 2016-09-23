@@ -5,3 +5,5 @@ package idle
 const Capability = "IDLE"
 
 const commandName = Capability
+
+const done = "DONE"

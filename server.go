@@ -26,7 +26,7 @@ func (h *Handler) Handle(conn server.Conn) error {
 		return err
 	}
 
-	if strings.ToUpper(scanner.Text()) != "DONE" {
+	if strings.ToUpper(scanner.Text()) != done {
 		return errors.New("Expected DONE")
 	}
 	return nil
