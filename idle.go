@@ -6,4 +6,4 @@ const Capability = "IDLE"
 
 const commandName = Capability
 
-const done = "DONE"
+const doneLine = "DONE"

@@ -11,24 +11,32 @@ type Response struct {
 }
 
 func (r *Response) HandleFrom(hdlr imap.RespHandler) error {
-	w := r.Writer
-
+	// Wait for a continuation request
 	for h := range hdlr {
-		if _, ok := h.Resp.(*imap.ContinuationResp); !ok {
-			h.Reject()
-			continue
+		if _, ok := h.Resp.(*imap.ContinuationResp); ok {
+			h.Accept()
+			break
 		}
-		h.Accept()
-
-		<-r.Done
-
-		if _, err := w.Write([]byte(done+"\r\n")); err != nil {
-			return err
-		}
-		if err := w.Flush(); err != nil {
-			return err
-		}
+		h.Reject()
 	}
 
-	return nil
+	// We got a continuation request, ignore all responses and wait for r.Done to
+	// be closed
+	for {
+		select {
+		case h, more := <-hdlr:
+			if !more {
+				return nil
+			}
+			h.Reject()
+		case <-r.Done:
+			if _, err := r.Writer.Write([]byte(doneLine+"\r\n")); err != nil {
+				return err
+			}
+			if err := r.Writer.Flush(); err != nil {
+				return err
+			}
+			return nil
+		}
+	}
 }
