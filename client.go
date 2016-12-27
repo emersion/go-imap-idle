@@ -21,7 +21,7 @@ func (c *Client) Idle(done <-chan struct{}) error {
 	cmd := &Command{}
 
 	res := &Response{
-		Done: done,
+		Done:   done,
 		Writer: c.c.Writer(),
 	}
 
