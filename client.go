@@ -4,11 +4,17 @@ import (
 	"github.com/emersion/go-imap/client"
 )
 
+// Client is an IDLE client.
 type Client struct {
-	client *client.Client
+	c *client.Client
 }
 
-// Indicate to the server that the client is ready to receive unsolicited
+// NewClient creates a new client.
+func NewClient(c *client.Client) *Client {
+	return &Client{c}
+}
+
+// Idle indicates to the server that the client is ready to receive unsolicited
 // mailbox update messages. When the client wants to send commands again, it
 // must first close done.
 func (c *Client) Idle(done <-chan struct{}) error {
@@ -16,22 +22,17 @@ func (c *Client) Idle(done <-chan struct{}) error {
 
 	res := &Response{
 		Done: done,
-		Writer: c.client.Writer(),
+		Writer: c.c.Writer(),
 	}
 
-	status, err := c.client.Execute(cmd, res)
-	if err != nil {
+	if status, err := c.c.Execute(cmd, res); err != nil {
 		return err
+	} else {
+		return status.Err()
 	}
-	return status.Err()
 }
 
-// SupportsIdle returns true if the server supports the IDLE extension.
-func (c *Client) SupportsIdle() bool {
-	return c.client.Caps[Capability]
-}
-
-// Create a new client.
-func NewClient(c *client.Client) *Client {
-	return &Client{client: c}
+// SupportIdle checks if the server supports the IDLE extension.
+func (c *Client) SupportIdle() (bool, error) {
+	return c.c.Support(Capability)
 }
