@@ -16,19 +16,12 @@ if _, err := c.Select("INBOX", false); err != nil {
 
 idleClient := idle.NewClient(c)
 
-// Get capabilities if needed
-if c.Caps == nil {
-	if _, err := c.Capability(); err != nil {
-		log.Fatal(err)
-	}
-}
-
 // Create a channel to receive mailbox updates
 statuses := make(chan *imap.MailboxStatus)
 c.MailboxUpdates = statuses
 
 // Check support for the IDLE extension
-if idleClient.SupportsIdle() {
+if ok, err := idleClient.SupportIdle(); err == nil && ok {
 	// Start idling
 	stop := make(chan struct{})
 	done := make(chan error, 1)
