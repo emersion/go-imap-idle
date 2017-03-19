@@ -48,6 +48,11 @@ if ok, err := idleClient.SupportIdle(); err == nil && ok {
 }
 ```
 
+Note that this is a minimal example, you'll need to:
+* Stop idling and re-send an `IDLE` command [at least every 29 minutes](https://tools.ietf.org/html/rfc2177#section-3)
+  to avoid being logged off
+* Properly handle servers that don't support the `IDLE` extension
+
 ### Server
 
 ```go
