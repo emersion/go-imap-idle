@@ -3,7 +3,6 @@ package idle_test
 import (
 	"log"
 
-	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 	"github.com/emersion/go-imap-idle"
 )
@@ -20,8 +19,8 @@ func ExampleClient_Idle() {
 	idleClient := idle.NewClient(c)
 
 	// Create a channel to receive mailbox updates
-	statuses := make(chan *imap.MailboxStatus)
-	c.MailboxUpdates = statuses
+	updates := make(chan interface{})
+	c.Updates = updates
 
 	// Check support for the IDLE extension
 	if ok, err := idleClient.SupportIdle(); err == nil && ok {
@@ -35,8 +34,8 @@ func ExampleClient_Idle() {
 		// Listen for updates
 		for {
 			select {
-			case status := <-statuses:
-				log.Println("New mailbox status:", status)
+			case update := <-updates:
+				log.Println("New update:", update)
 				close(stop)
 			case err := <-done:
 				if err != nil {
