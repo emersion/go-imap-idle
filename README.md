@@ -20,38 +20,32 @@ idleClient := idle.NewClient(c)
 statuses := make(chan *imap.MailboxStatus)
 c.MailboxUpdates = statuses
 
-// Check support for the IDLE extension
-if ok, err := idleClient.SupportIdle(); err == nil && ok {
-	// Start idling
-	stop := make(chan struct{})
-	done := make(chan error, 1)
-	go func() {
-		done <- idleClient.Idle(stop)
-	}()
+// Start idling
+stopped := false
+stop := make(chan struct{})
+done := make(chan error, 1)
+go func() {
+	done <- idleClient.IdleWithFallback(stop, 0)
+}()
 
-	// Listen for updates
-	for {
-		select {
-		case status := <-statuses:
-			log.Println("New mailbox status:", status)
+// Listen for updates
+for {
+	select {
+	case status := <-statuses:
+		log.Println("New mailbox status:", status)
+		if !stopped {
 			close(stop)
-		case err := <-done:
-			if err != nil {
-				log.Fatal(err)
-			}
-			log.Println("Not idling anymore")
-			return
+			stopped = true
 		}
+	case err := <-done:
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("Not idling anymore")
+		return
 	}
-} else {
-	// Fallback: call periodically c.Noop()
 }
 ```
-
-Note that this is a minimal example, you'll need to:
-* Stop idling and re-send an `IDLE` command [at least every 29 minutes](https://tools.ietf.org/html/rfc2177#section-3)
-  to avoid being logged off
-* Properly handle servers that don't support the `IDLE` extension
 
 ### Server
 
