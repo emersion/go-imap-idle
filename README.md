@@ -9,6 +9,9 @@
 ### Client
 
 ```go
+// Let's assume c is an IMAP client
+var c *client.Client
+
 // Select a mailbox
 if _, err := c.Select("INBOX", false); err != nil {
 	log.Fatal(err)
@@ -17,26 +20,20 @@ if _, err := c.Select("INBOX", false); err != nil {
 idleClient := idle.NewClient(c)
 
 // Create a channel to receive mailbox updates
-statuses := make(chan *imap.MailboxStatus)
-c.MailboxUpdates = statuses
+updates := make(chan client.Update)
+c.Updates = updates
 
 // Start idling
-stopped := false
-stop := make(chan struct{})
 done := make(chan error, 1)
 go func() {
-	done <- idleClient.IdleWithFallback(stop, 0)
+	done <- idleClient.IdleWithFallback(nil, 0)
 }()
 
 // Listen for updates
 for {
 	select {
-	case status := <-statuses:
-		log.Println("New mailbox status:", status)
-		if !stopped {
-			close(stop)
-			stopped = true
-		}
+	case update := <-updates:
+		log.Println("New update:", update)
 	case err := <-done:
 		if err != nil {
 			log.Fatal(err)

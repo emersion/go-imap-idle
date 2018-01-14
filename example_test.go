@@ -19,7 +19,7 @@ func ExampleClient_Idle() {
 	idleClient := idle.NewClient(c)
 
 	// Create a channel to receive mailbox updates
-	updates := make(chan interface{})
+	updates := make(chan client.Update)
 	c.Updates = updates
 
 	// Check support for the IDLE extension
@@ -66,7 +66,7 @@ func ExampleClient_IdleWithFallback() {
 	idleClient := idle.NewClient(c)
 
 	// Create a channel to receive mailbox updates
-	updates := make(chan interface{})
+	updates := make(chan client.Update)
 	c.Updates = updates
 
 	// Start idling
