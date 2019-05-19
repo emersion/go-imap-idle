@@ -30,19 +30,15 @@ func NewClient(c *client.Client) *Client {
 func (c *Client) idle(stop <-chan struct{}) error {
 	cmd := &Command{}
 
-	done := make(chan error, 1)
 	res := &Response{
 		Stop:   stop,
-		Done:   done,
-		Writer: c.c.Writer(),
+		RepliesCh: make(chan []byte, 10),
 	}
 
 	if status, err := c.c.Execute(cmd, res); err != nil {
 		return err
-	} else if err := status.Err(); err != nil {
-		return err
 	} else {
-		return <-done
+		return status.Err()
 	}
 }
 
