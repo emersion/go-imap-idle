@@ -9,7 +9,7 @@ import (
 
 const (
 	defaultLogoutTimeout = 25 * time.Minute
-	defaultPollInterval = time.Minute
+	defaultPollInterval  = time.Minute
 )
 
 // Client is an IDLE client.
@@ -31,7 +31,7 @@ func (c *Client) idle(stop <-chan struct{}) error {
 	cmd := &Command{}
 
 	res := &Response{
-		Stop:   stop,
+		Stop:      stop,
 		RepliesCh: make(chan []byte, 10),
 	}
 
@@ -70,6 +70,7 @@ func (c *Client) Idle(stop <-chan struct{}) error {
 			close(stopOrRestart)
 			return <-done
 		case err := <-done:
+			close(stopOrRestart)
 			if err != nil {
 				return err
 			}
