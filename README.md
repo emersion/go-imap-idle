@@ -52,6 +52,8 @@ for {
 s.Enable(idle.NewExtension())
 ```
 
+Backend should implement Backend interface defined in this package.
+
 ## License
 
 MIT
